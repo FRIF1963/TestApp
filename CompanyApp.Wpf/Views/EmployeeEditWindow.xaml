@@ -1,0 +1,53 @@
+<Window x:Class="CompanyApp.Wpf.Views.EmployeeEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="clr-namespace:CompanyApp.Wpf.Converters"
+        Title="{Binding Title}"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        MinWidth="420">
+    <Window.Resources>
+        <converters:EnumDescriptionConverter x:Key="EnumDescriptionConverter" />
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="140" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="ФИО:" />
+        <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8"
+                 Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"
+                 IsReadOnly="{Binding IsReadOnly}" />
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="Должность:" />
+        <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,8"
+                  ItemsSource="{Binding Positions}"
+                  SelectedItem="{Binding SelectedPosition}"
+                  DisplayMemberPath="DisplayName"
+                  IsEnabled="{Binding CanSave}" />
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,0,8,8" VerticalAlignment="Center" Text="Дата рождения:" />
+        <DatePicker Grid.Row="2" Grid.Column="1" Margin="0,0,0,8"
+                    SelectedDate="{Binding BirthDate}"
+                    IsEnabled="{Binding CanSave}" />
+
+        <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+                    Margin="0,12,0,0"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+            <Button Width="100" Margin="0,0,8,0" Content="Сохранить"
+                    Command="{Binding SaveCommand}"
+                    Visibility="{Binding CanSave, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            <Button Width="100" Content="Закрыть" Command="{Binding CancelCommand}" />
+        </StackPanel>
+    </Grid>
+</Window>

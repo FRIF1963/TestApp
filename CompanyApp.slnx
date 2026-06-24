@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="CompanyApp.Application/CompanyApp.Application.csproj" />
+  <Project Path="CompanyApp.Domain/CompanyApp.Domain.csproj" />
+  <Project Path="CompanyApp.Infrastructure/CompanyApp.Infrastructure.csproj" />
+  <Project Path="CompanyApp.Wpf/CompanyApp.Wpf.csproj" />
+</Solution>
