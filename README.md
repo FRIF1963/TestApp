@@ -64,12 +64,3 @@ dotnet run --project CompanyApp.Wpf
 | Контрагент  | Наименование, ИНН, Куратор (Сотрудник) |
 | Заказ       | Дата, Сумма, Сотрудник, Контрагент |
 
-## Публикация на GitHub
-
-```bash
-git init
-git add .
-git commit -m "Initial commit: WPF + NHibernate + MySQL test application"
-git remote add origin <your-repo-url>
-git push -u origin main
-```
