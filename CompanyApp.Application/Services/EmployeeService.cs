@@ -6,22 +6,24 @@ namespace CompanyApp.Application.Services;
 
 public class EmployeeService : IEmployeeService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
-    public EmployeeService(IUnitOfWork unitOfWork)
+    public EmployeeService(IUnitOfWorkFactory unitOfWorkFactory)
     {
-        _unitOfWork = unitOfWork;
+        _unitOfWorkFactory = unitOfWorkFactory;
     }
 
     public async Task<IReadOnlyList<Employee>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var repository = _unitOfWork.GetRepository<Employee>();
+        using var unitOfWork = _unitOfWorkFactory.Create();
+        var repository = unitOfWork.GetRepository<Employee>();
         return await Task.FromResult(repository.Query().OrderBy(e => e.FullName).ToList());
     }
 
     public async Task<Employee?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var repository = _unitOfWork.GetRepository<Employee>();
+        using var unitOfWork = _unitOfWorkFactory.Create();
+        var repository = unitOfWork.GetRepository<Employee>();
         return await repository.GetByIdAsync(id, cancellationToken);
     }
 
@@ -29,9 +31,10 @@ public class EmployeeService : IEmployeeService
     {
         Validate(employee);
 
-        var repository = _unitOfWork.GetRepository<Employee>();
+        using var unitOfWork = _unitOfWorkFactory.Create();
+        var repository = unitOfWork.GetRepository<Employee>();
         await repository.AddAsync(employee, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+        await unitOfWork.CommitAsync(cancellationToken);
         return employee.Id;
     }
 
@@ -39,7 +42,8 @@ public class EmployeeService : IEmployeeService
     {
         Validate(employee);
 
-        var repository = _unitOfWork.GetRepository<Employee>();
+        using var unitOfWork = _unitOfWorkFactory.Create();
+        var repository = unitOfWork.GetRepository<Employee>();
         var existing = await repository.GetByIdAsync(employee.Id, cancellationToken)
             ?? throw new ValidationException("Сотрудник не найден.");
 
@@ -48,14 +52,15 @@ public class EmployeeService : IEmployeeService
         existing.BirthDate = employee.BirthDate;
 
         await repository.UpdateAsync(existing, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+        await unitOfWork.CommitAsync(cancellationToken);
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var employeeRepository = _unitOfWork.GetRepository<Employee>();
-        var counterpartyRepository = _unitOfWork.GetRepository<Counterparty>();
-        var orderRepository = _unitOfWork.GetRepository<Order>();
+        using var unitOfWork = _unitOfWorkFactory.Create();
+        var employeeRepository = unitOfWork.GetRepository<Employee>();
+        var counterpartyRepository = unitOfWork.GetRepository<Counterparty>();
+        var orderRepository = unitOfWork.GetRepository<Order>();
 
         var employee = await employeeRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new ValidationException("Сотрудник не найден.");
@@ -73,7 +78,7 @@ public class EmployeeService : IEmployeeService
         }
 
         await employeeRepository.DeleteAsync(employee, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+        await unitOfWork.CommitAsync(cancellationToken);
     }
 
     private static void Validate(Employee employee)

@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using CompanyApp.Application;
 using CompanyApp.Infrastructure;
+using CompanyApp.Wpf.Factories;
 using CompanyApp.Wpf.Services;
 using CompanyApp.Wpf.ViewModels;
 using Microsoft.Extensions.Configuration;
@@ -29,16 +30,15 @@ public partial class App : System.Windows.Application
                 services.AddApplication();
 
                 services.AddSingleton<IMessageBoxService, MessageBoxService>();
+                services.AddSingleton<IEmployeeEditViewModelFactory, EmployeeEditViewModelFactory>();
+                services.AddSingleton<ICounterpartyEditViewModelFactory, CounterpartyEditViewModelFactory>();
+                services.AddSingleton<IOrderEditViewModelFactory, OrderEditViewModelFactory>();
                 services.AddSingleton<IDialogService, DialogService>();
 
                 services.AddSingleton<EmployeeListViewModel>();
                 services.AddSingleton<CounterpartyListViewModel>();
                 services.AddSingleton<OrderListViewModel>();
                 services.AddSingleton<MainViewModel>();
-
-                services.AddTransient<EmployeeEditViewModel>();
-                services.AddTransient<CounterpartyEditViewModel>();
-                services.AddTransient<OrderEditViewModel>();
 
                 services.AddSingleton<MainWindow>();
             })

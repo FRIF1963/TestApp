@@ -1,8 +1,8 @@
 using System.Windows;
 using CompanyApp.Domain.Entities;
+using CompanyApp.Wpf.Factories;
 using CompanyApp.Wpf.ViewModels;
 using CompanyApp.Wpf.Views;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace CompanyApp.Wpf.Services;
 
@@ -17,31 +17,35 @@ public interface IDialogService
 
 public class DialogService : IDialogService
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IEmployeeEditViewModelFactory _employeeEditViewModelFactory;
+    private readonly ICounterpartyEditViewModelFactory _counterpartyEditViewModelFactory;
+    private readonly IOrderEditViewModelFactory _orderEditViewModelFactory;
 
-    public DialogService(IServiceProvider serviceProvider)
+    public DialogService(
+        IEmployeeEditViewModelFactory employeeEditViewModelFactory,
+        ICounterpartyEditViewModelFactory counterpartyEditViewModelFactory,
+        IOrderEditViewModelFactory orderEditViewModelFactory)
     {
-        _serviceProvider = serviceProvider;
+        _employeeEditViewModelFactory = employeeEditViewModelFactory;
+        _counterpartyEditViewModelFactory = counterpartyEditViewModelFactory;
+        _orderEditViewModelFactory = orderEditViewModelFactory;
     }
 
     public bool? ShowEmployeeDialog(EditMode mode, Employee? employee = null)
     {
-        var viewModel = ActivatorUtilities.CreateInstance<EmployeeEditViewModel>(
-            _serviceProvider, new object?[] { mode, employee });
+        var viewModel = _employeeEditViewModelFactory.Create(mode, employee);
         return ShowDialog<EmployeeEditWindow>(viewModel);
     }
 
     public bool? ShowCounterpartyDialog(EditMode mode, Counterparty? counterparty = null)
     {
-        var viewModel = ActivatorUtilities.CreateInstance<CounterpartyEditViewModel>(
-            _serviceProvider, new object?[] { mode, counterparty });
+        var viewModel = _counterpartyEditViewModelFactory.Create(mode, counterparty);
         return ShowDialog<CounterpartyEditWindow>(viewModel);
     }
 
     public bool? ShowOrderDialog(EditMode mode, Order? order = null)
     {
-        var viewModel = ActivatorUtilities.CreateInstance<OrderEditViewModel>(
-            _serviceProvider, new object?[] { mode, order });
+        var viewModel = _orderEditViewModelFactory.Create(mode, order);
         return ShowDialog<OrderEditWindow>(viewModel);
     }
 

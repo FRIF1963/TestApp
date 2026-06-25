@@ -20,8 +20,8 @@ public class MainViewModel
 
     public async Task InitializeAsync()
     {
-        await Employees.LoadCommand.ExecuteAsync(null);
-        await Counterparties.LoadCommand.ExecuteAsync(null);
-        await Orders.LoadCommand.ExecuteAsync(null);
+        await Employees.RefreshAsync();
+        await Counterparties.RefreshAsync();
+        await Orders.RefreshAsync();
     }
 }

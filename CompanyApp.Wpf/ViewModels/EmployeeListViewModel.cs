@@ -5,12 +5,13 @@ using CompanyApp.Application.Exceptions;
 using CompanyApp.Application.Services;
 using CompanyApp.Domain.Entities;
 using CompanyApp.Wpf.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CompanyApp.Wpf.ViewModels;
 
 public partial class EmployeeListViewModel : ObservableObject
 {
-    private readonly IEmployeeService _employeeService;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IDialogService _dialogService;
     private readonly IMessageBoxService _messageBoxService;
 
@@ -20,21 +21,43 @@ public partial class EmployeeListViewModel : ObservableObject
     [ObservableProperty]
     private Employee? _selectedItem;
 
+    public IAsyncRelayCommand RefreshCommand { get; }
+
     public EmployeeListViewModel(
-        IEmployeeService employeeService,
+        IServiceScopeFactory scopeFactory,
         IDialogService dialogService,
         IMessageBoxService messageBoxService)
     {
-        _employeeService = employeeService;
+        _scopeFactory = scopeFactory;
         _dialogService = dialogService;
         _messageBoxService = messageBoxService;
+        RefreshCommand = new AsyncRelayCommand(RefreshAsync, AsyncRelayCommandOptions.AllowConcurrentExecutions);
     }
 
-    [RelayCommand]
-    private async Task LoadAsync()
+    public async Task RefreshAsync()
     {
-        var employees = await _employeeService.GetAllAsync();
-        Items = new ObservableCollection<Employee>(employees);
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var employeeService = scope.ServiceProvider.GetRequiredService<IEmployeeService>();
+            var employees = await employeeService.GetAllAsync();
+            var selectedId = SelectedItem?.Id;
+
+            Items.Clear();
+            foreach (var employee in employees)
+            {
+                Items.Add(employee);
+            }
+
+            if (selectedId.HasValue)
+            {
+                SelectedItem = Items.FirstOrDefault(e => e.Id == selectedId.Value);
+            }
+        }
+        catch (Exception ex)
+        {
+            _messageBoxService.ShowError(ex.Message);
+        }
     }
 
     [RelayCommand]
@@ -42,7 +65,7 @@ public partial class EmployeeListViewModel : ObservableObject
     {
         if (_dialogService.ShowEmployeeDialog(EditMode.Add) == true)
         {
-            await LoadAsync();
+            await RefreshAsync();
         }
     }
 
@@ -56,7 +79,7 @@ public partial class EmployeeListViewModel : ObservableObject
 
         if (_dialogService.ShowEmployeeDialog(EditMode.Edit, SelectedItem) == true)
         {
-            await LoadAsync();
+            await RefreshAsync();
         }
     }
 
@@ -86,8 +109,10 @@ public partial class EmployeeListViewModel : ObservableObject
 
         try
         {
-            await _employeeService.DeleteAsync(SelectedItem.Id);
-            await LoadAsync();
+            using var scope = _scopeFactory.CreateScope();
+            var employeeService = scope.ServiceProvider.GetRequiredService<IEmployeeService>();
+            await employeeService.DeleteAsync(SelectedItem.Id);
+            await RefreshAsync();
         }
         catch (ValidationException ex)
         {

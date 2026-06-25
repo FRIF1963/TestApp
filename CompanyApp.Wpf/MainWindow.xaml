@@ -13,7 +13,7 @@
                     <Button Margin="0,0,8,0" Content="Редактировать" Command="{Binding Employees.EditCommand}" />
                     <Button Margin="0,0,8,0" Content="Просмотр" Command="{Binding Employees.ViewCommand}" />
                     <Button Margin="0,0,8,0" Content="Удалить" Command="{Binding Employees.DeleteCommand}" />
-                    <Button Content="Обновить" Command="{Binding Employees.LoadCommand}" />
+                    <Button Content="Обновить" Command="{Binding Employees.RefreshCommand}" />
                 </StackPanel>
                 <DataGrid x:Name="EmployeesGrid"
                           AutoGenerateColumns="False"
@@ -38,7 +38,7 @@
                     <Button Margin="0,0,8,0" Content="Редактировать" Command="{Binding Counterparties.EditCommand}" />
                     <Button Margin="0,0,8,0" Content="Просмотр" Command="{Binding Counterparties.ViewCommand}" />
                     <Button Margin="0,0,8,0" Content="Удалить" Command="{Binding Counterparties.DeleteCommand}" />
-                    <Button Content="Обновить" Command="{Binding Counterparties.LoadCommand}" />
+                    <Button Content="Обновить" Command="{Binding Counterparties.RefreshCommand}" />
                 </StackPanel>
                 <DataGrid x:Name="CounterpartiesGrid"
                           AutoGenerateColumns="False"
@@ -63,7 +63,7 @@
                     <Button Margin="0,0,8,0" Content="Редактировать" Command="{Binding Orders.EditCommand}" />
                     <Button Margin="0,0,8,0" Content="Просмотр" Command="{Binding Orders.ViewCommand}" />
                     <Button Margin="0,0,8,0" Content="Удалить" Command="{Binding Orders.DeleteCommand}" />
-                    <Button Content="Обновить" Command="{Binding Orders.LoadCommand}" />
+                    <Button Content="Обновить" Command="{Binding Orders.RefreshCommand}" />
                 </StackPanel>
                 <DataGrid x:Name="OrdersGrid"
                           AutoGenerateColumns="False"

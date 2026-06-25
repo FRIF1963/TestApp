@@ -5,12 +5,13 @@ using CompanyApp.Application.Exceptions;
 using CompanyApp.Application.Services;
 using CompanyApp.Domain.Entities;
 using CompanyApp.Wpf.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CompanyApp.Wpf.ViewModels;
 
 public partial class OrderListViewModel : ObservableObject
 {
-    private readonly IOrderService _orderService;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly IDialogService _dialogService;
     private readonly IMessageBoxService _messageBoxService;
 
@@ -20,21 +21,43 @@ public partial class OrderListViewModel : ObservableObject
     [ObservableProperty]
     private Order? _selectedItem;
 
+    public IAsyncRelayCommand RefreshCommand { get; }
+
     public OrderListViewModel(
-        IOrderService orderService,
+        IServiceScopeFactory scopeFactory,
         IDialogService dialogService,
         IMessageBoxService messageBoxService)
     {
-        _orderService = orderService;
+        _scopeFactory = scopeFactory;
         _dialogService = dialogService;
         _messageBoxService = messageBoxService;
+        RefreshCommand = new AsyncRelayCommand(RefreshAsync, AsyncRelayCommandOptions.AllowConcurrentExecutions);
     }
 
-    [RelayCommand]
-    private async Task LoadAsync()
+    public async Task RefreshAsync()
     {
-        var items = await _orderService.GetAllAsync();
-        Items = new ObservableCollection<Order>(items);
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var orderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
+            var items = await orderService.GetAllAsync();
+            var selectedId = SelectedItem?.Id;
+
+            Items.Clear();
+            foreach (var item in items)
+            {
+                Items.Add(item);
+            }
+
+            if (selectedId.HasValue)
+            {
+                SelectedItem = Items.FirstOrDefault(o => o.Id == selectedId.Value);
+            }
+        }
+        catch (Exception ex)
+        {
+            _messageBoxService.ShowError(ex.Message);
+        }
     }
 
     [RelayCommand]
@@ -42,7 +65,7 @@ public partial class OrderListViewModel : ObservableObject
     {
         if (_dialogService.ShowOrderDialog(EditMode.Add) == true)
         {
-            await LoadAsync();
+            await RefreshAsync();
         }
     }
 
@@ -56,7 +79,7 @@ public partial class OrderListViewModel : ObservableObject
 
         if (_dialogService.ShowOrderDialog(EditMode.Edit, SelectedItem) == true)
         {
-            await LoadAsync();
+            await RefreshAsync();
         }
     }
 
@@ -86,8 +109,10 @@ public partial class OrderListViewModel : ObservableObject
 
         try
         {
-            await _orderService.DeleteAsync(SelectedItem.Id);
-            await LoadAsync();
+            using var scope = _scopeFactory.CreateScope();
+            var orderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
+            await orderService.DeleteAsync(SelectedItem.Id);
+            await RefreshAsync();
         }
         catch (ValidationException ex)
         {

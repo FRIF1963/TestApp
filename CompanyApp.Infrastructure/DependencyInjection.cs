@@ -14,6 +14,7 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException("Строка подключения 'Default' не найдена.");
 
         services.AddSingleton<ISessionFactory>(_ => NHibernateHelper.BuildSessionFactory(connectionString));
+        services.AddSingleton<IUnitOfWorkFactory, Repositories.UnitOfWorkFactory>();
         services.AddTransient<IUnitOfWork, Repositories.UnitOfWork>();
 
         return services;

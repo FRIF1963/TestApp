@@ -7,40 +7,44 @@ namespace CompanyApp.Application.Services;
 
 public class CounterpartyService : ICounterpartyService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
-    public CounterpartyService(IUnitOfWork unitOfWork)
+    public CounterpartyService(IUnitOfWorkFactory unitOfWorkFactory)
     {
-        _unitOfWork = unitOfWork;
+        _unitOfWorkFactory = unitOfWorkFactory;
     }
 
     public async Task<IReadOnlyList<Counterparty>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var repository = _unitOfWork.GetRepository<Counterparty>();
+        using var unitOfWork = _unitOfWorkFactory.Create();
+        var repository = unitOfWork.GetRepository<Counterparty>();
         return await Task.FromResult(repository.Query().OrderBy(c => c.Name).ToList());
     }
 
     public async Task<Counterparty?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var repository = _unitOfWork.GetRepository<Counterparty>();
+        using var unitOfWork = _unitOfWorkFactory.Create();
+        var repository = unitOfWork.GetRepository<Counterparty>();
         return await repository.GetByIdAsync(id, cancellationToken);
     }
 
     public async Task<int> CreateAsync(Counterparty counterparty, CancellationToken cancellationToken = default)
     {
-        await ValidateAsync(counterparty, cancellationToken);
+        using var unitOfWork = _unitOfWorkFactory.Create();
+        await ValidateAsync(counterparty, unitOfWork, cancellationToken);
 
-        var repository = _unitOfWork.GetRepository<Counterparty>();
+        var repository = unitOfWork.GetRepository<Counterparty>();
         await repository.AddAsync(counterparty, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+        await unitOfWork.CommitAsync(cancellationToken);
         return counterparty.Id;
     }
 
     public async Task UpdateAsync(Counterparty counterparty, CancellationToken cancellationToken = default)
     {
-        await ValidateAsync(counterparty, cancellationToken);
+        using var unitOfWork = _unitOfWorkFactory.Create();
+        await ValidateAsync(counterparty, unitOfWork, cancellationToken);
 
-        var repository = _unitOfWork.GetRepository<Counterparty>();
+        var repository = unitOfWork.GetRepository<Counterparty>();
         var existing = await repository.GetByIdAsync(counterparty.Id, cancellationToken)
             ?? throw new ValidationException("Контрагент не найден.");
 
@@ -49,13 +53,14 @@ public class CounterpartyService : ICounterpartyService
         existing.Curator = counterparty.Curator;
 
         await repository.UpdateAsync(existing, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+        await unitOfWork.CommitAsync(cancellationToken);
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var counterpartyRepository = _unitOfWork.GetRepository<Counterparty>();
-        var orderRepository = _unitOfWork.GetRepository<Order>();
+        using var unitOfWork = _unitOfWorkFactory.Create();
+        var counterpartyRepository = unitOfWork.GetRepository<Counterparty>();
+        var orderRepository = unitOfWork.GetRepository<Order>();
 
         var counterparty = await counterpartyRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new ValidationException("Контрагент не найден.");
@@ -67,10 +72,13 @@ public class CounterpartyService : ICounterpartyService
         }
 
         await counterpartyRepository.DeleteAsync(counterparty, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+        await unitOfWork.CommitAsync(cancellationToken);
     }
 
-    private async Task ValidateAsync(Counterparty counterparty, CancellationToken cancellationToken)
+    private static async Task ValidateAsync(
+        Counterparty counterparty,
+        IUnitOfWork unitOfWork,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(counterparty.Name))
         {
@@ -84,7 +92,7 @@ public class CounterpartyService : ICounterpartyService
             throw new ValidationException("Необходимо выбрать куратора.");
         }
 
-        var employeeRepository = _unitOfWork.GetRepository<Employee>();
+        var employeeRepository = unitOfWork.GetRepository<Employee>();
         var curator = await employeeRepository.GetByIdAsync(counterparty.Curator.Id, cancellationToken)
             ?? throw new ValidationException("Выбранный куратор не найден.");
 

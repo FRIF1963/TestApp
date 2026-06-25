@@ -7,9 +7,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        services.AddTransient<IEmployeeService, EmployeeService>();
-        services.AddTransient<ICounterpartyService, CounterpartyService>();
-        services.AddTransient<IOrderService, OrderService>();
+        services.AddScoped<IEmployeeService, EmployeeService>();
+        services.AddScoped<ICounterpartyService, CounterpartyService>();
+        services.AddScoped<IOrderService, OrderService>();
 
         return services;
     }
